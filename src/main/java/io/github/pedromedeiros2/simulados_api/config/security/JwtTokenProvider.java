@@ -3,7 +3,6 @@ package io.github.pedromedeiros2.simulados_api.config.security;
 import io.github.pedromedeiros2.simulados_api.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import java.security.Key;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
