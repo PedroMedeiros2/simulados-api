@@ -1,6 +1,5 @@
 package io.github.pedromedeiros2.simulados_api.service;
 
-import io.github.pedromedeiros2.simulados_api.model.User;
 import io.github.pedromedeiros2.simulados_api.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
