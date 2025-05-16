@@ -4,18 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class JwtResponseDTO {
     private String token;
     private String type = "Bearer";
-    private Long id;
+    private UUID id;
     private String username;
     private String name;
     private String role;
 
-    public JwtResponseDTO(String accessToken, Long id, String username, String name, String role) {
+    public JwtResponseDTO(String accessToken, UUID id, String username, String name, String role) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
