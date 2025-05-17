@@ -5,13 +5,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimuladoQuestaoResponseDTO {
     private Long id;
-    private Long questionId;
+    private UUID questionId;
     private String enunciado;
     private List<String> alternatives;
     private String respostaCorretaQuestao;

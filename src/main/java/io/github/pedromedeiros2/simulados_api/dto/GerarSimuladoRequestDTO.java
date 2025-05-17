@@ -19,4 +19,6 @@ public class GerarSimuladoRequestDTO {
     private String disciplina;
 
     private String nivelDificuldade;
+
+    private boolean aceitarMenosQuestoes = false;
 }
