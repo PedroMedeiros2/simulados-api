@@ -1,7 +1,8 @@
 package io.github.pedromedeiros2.simulados_api.dto;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,10 +12,14 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GerarSimuladoRequestDTO {
+public class FiltroSimuladoDTO {
     @NotNull
-    @Size(min = 1)
-    private List<FiltroSimuladoDTO> filtros;
+    private String disciplina;
 
-    private boolean aceitarMenosQuestoes = false;
+    @NotEmpty
+    private List<String> dificuldades;
+
+    @NotNull
+    @Min(1)
+    private Integer numeroQuestoes;
 }

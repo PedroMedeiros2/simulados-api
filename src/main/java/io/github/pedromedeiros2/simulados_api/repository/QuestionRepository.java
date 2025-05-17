@@ -10,4 +10,5 @@ public interface QuestionRepository extends JpaRepository<Question, UUID> {
     List<Question> findByDisciplinaAndNivelDificuldade(String disciplina, String nivelDificuldade);
     List<Question> findByDisciplina(String disciplina);
     List<Question> findByNivelDificuldade(String nivelDificuldade);
+    List<Question> findByDisciplinaAndNivelDificuldadeIn(String disciplina, List<String> dificuldades);
 }

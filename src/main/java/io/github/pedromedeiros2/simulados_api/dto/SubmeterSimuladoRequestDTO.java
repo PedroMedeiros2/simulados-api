@@ -17,5 +17,5 @@ public class SubmeterSimuladoRequestDTO {
     private UUID simuladoId;
 
     @NotNull(message = "As respostas não podem ser nulas")
-    private Map<Long, String> respostas;
+    private Map<UUID, String> respostas;
 }

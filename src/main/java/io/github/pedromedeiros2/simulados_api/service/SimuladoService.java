@@ -1,9 +1,6 @@
 package io.github.pedromedeiros2.simulados_api.service;
 
-import io.github.pedromedeiros2.simulados_api.dto.GerarSimuladoRequestDTO;
-import io.github.pedromedeiros2.simulados_api.dto.SimuladoQuestaoResponseDTO;
-import io.github.pedromedeiros2.simulados_api.dto.SimuladoResponseDTO;
-import io.github.pedromedeiros2.simulados_api.dto.SubmeterSimuladoRequestDTO;
+import io.github.pedromedeiros2.simulados_api.dto.*;
 import io.github.pedromedeiros2.simulados_api.model.Question;
 import io.github.pedromedeiros2.simulados_api.model.Simulado;
 import io.github.pedromedeiros2.simulados_api.model.SimuladoQuestao;
@@ -18,10 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,56 +36,89 @@ public class SimuladoService {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + currentUsername));
 
-        List<Question> availableQuestions;
-        if (requestDTO.getDisciplina() != null && !requestDTO.getDisciplina().isBlank() &&
-                requestDTO.getNivelDificuldade() != null && !requestDTO.getNivelDificuldade().isBlank()) {
-            availableQuestions = questionRepository.findByDisciplinaAndNivelDificuldade(requestDTO.getDisciplina(), requestDTO.getNivelDificuldade());
-        } else if (requestDTO.getDisciplina() != null && !requestDTO.getDisciplina().isBlank()) {
-            availableQuestions = questionRepository.findByDisciplina(requestDTO.getDisciplina());
-        } else if (requestDTO.getNivelDificuldade() != null && !requestDTO.getNivelDificuldade().isBlank()) {
-            availableQuestions = questionRepository.findByNivelDificuldade(requestDTO.getNivelDificuldade());
-        } else {
-            availableQuestions = questionRepository.findAll();
+        if (requestDTO.getFiltros() == null || requestDTO.getFiltros().isEmpty()) {
+            throw new RuntimeException("Nenhum filtro de disciplina fornecido.");
         }
 
-        if (availableQuestions.isEmpty()) {
-            throw new RuntimeException("Nenhuma questão encontrada para os critérios fornecidos.");
-        }
+        List<Question> todasQuestoesSelecionadas = new ArrayList<>();
 
-        Collections.shuffle(availableQuestions);
-        List<Question> selectedQuestions = availableQuestions.stream()
-                .limit(requestDTO.getNumeroQuestoes())
-                .toList();
-
-        if (selectedQuestions.size() < requestDTO.getNumeroQuestoes()) {
-            if (!requestDTO.isAceitarMenosQuestoes()) {
-                throw new RuntimeException("Apenas " + selectedQuestions.size() +
-                        " questões disponíveis para os critérios fornecidos. Envie novamente com 'aceitarMenosQuestoes = true' para continuar com menos questões.");
+        for (FiltroSimuladoDTO filtro : requestDTO.getFiltros()) {
+            if (filtro.getDisciplina() == null || filtro.getDisciplina().isBlank()) {
+                throw new RuntimeException("Disciplina não pode ser nula ou vazia no filtro.");
             }
+            if (filtro.getDificuldades() == null || filtro.getDificuldades().isEmpty()) {
+                throw new RuntimeException("Lista de dificuldades não pode ser vazia no filtro para a disciplina " + filtro.getDisciplina());
+            }
+            if (filtro.getNumeroQuestoes() == null || filtro.getNumeroQuestoes() <= 0) {
+                throw new RuntimeException("Número de questões deve ser maior que zero no filtro para a disciplina " + filtro.getDisciplina());
+            }
+
+            List<Question> questoesDisponiveis = questionRepository.findByDisciplinaAndNivelDificuldadeIn(
+                    filtro.getDisciplina(),
+                    filtro.getDificuldades()
+            );
+
+            if (questoesDisponiveis.isEmpty()) {
+                if (!requestDTO.isAceitarMenosQuestoes()) {
+                    throw new RuntimeException("Nenhuma questão disponível para disciplina " + filtro.getDisciplina() +
+                            " com as dificuldades especificadas.");
+                }
+                continue;
+            }
+
+            Collections.shuffle(questoesDisponiveis);
+
+            List<Question> selecionadas = questoesDisponiveis.stream()
+                    .limit(filtro.getNumeroQuestoes())
+                    .toList();
+
+            if (selecionadas.size() < filtro.getNumeroQuestoes() && !requestDTO.isAceitarMenosQuestoes()) {
+                throw new RuntimeException("Disponível apenas " + selecionadas.size() +
+                        " questões para disciplina " + filtro.getDisciplina() +
+                        ". Use aceitarMenosQuestoes = true para continuar com menos questões.");
+            }
+
+            todasQuestoesSelecionadas.addAll(selecionadas);
+        }
+
+        if (todasQuestoesSelecionadas.isEmpty()) {
+            throw new RuntimeException("Nenhuma questão selecionada para o simulado com os filtros fornecidos.");
         }
 
         Simulado simulado = new Simulado();
         simulado.setUser(currentUser);
         simulado.setDataRealizacao(LocalDateTime.now());
-        simulado.setDisciplinaFiltro(requestDTO.getDisciplina());
-        simulado.setNivelDificuldadeFiltro(requestDTO.getNivelDificuldade());
-        simulado.setNumeroQuestoesSolicitado(requestDTO.getNumeroQuestoes());
 
-        selectedQuestions.forEach(q -> {
+        String disciplinas = requestDTO.getFiltros().stream()
+                .map(FiltroSimuladoDTO::getDisciplina)
+                .distinct()
+                .collect(Collectors.joining(","));
+
+        String dificuldades = requestDTO.getFiltros().stream()
+                .flatMap(f -> f.getDificuldades().stream())
+                .distinct()
+                .collect(Collectors.joining(","));
+
+        simulado.setDisciplinaFiltro(disciplinas);
+        simulado.setNivelDificuldadeFiltro(dificuldades);
+        simulado.setNumeroQuestoesSolicitado(todasQuestoesSelecionadas.size());
+
+        todasQuestoesSelecionadas.forEach(q -> {
             SimuladoQuestao sq = new SimuladoQuestao(simulado, q);
             simulado.getQuestoesSimulado().add(sq);
         });
 
         Simulado savedSimulado = simuladoRepository.save(simulado);
-        return mapToSimuladoResponseDTO(savedSimulado, false); // false: don't include answers yet
+
+        return mapToSimuladoResponseDTO(savedSimulado, false);
     }
+
 
     @Transactional
     public SimuladoResponseDTO submeterSimulado(SubmeterSimuladoRequestDTO requestDTO) {
         Simulado simulado = simuladoRepository.findById(requestDTO.getSimuladoId())
                 .orElseThrow(() -> new RuntimeException("Simulado não encontrado com ID: " + requestDTO.getSimuladoId()));
 
-        // Ensure the user submitting is the one who started it (optional, based on requirements)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
         if (!simulado.getUser().getUsername().equals(currentUsername)) {
