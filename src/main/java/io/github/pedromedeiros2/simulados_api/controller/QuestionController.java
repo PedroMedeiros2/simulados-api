@@ -41,7 +41,7 @@ public class QuestionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<QuestionResponseDTO> updateQuestion(@PathVariable UUID id, @Valid @RequestBody QuestionRequestDTO questionRequestDTO) {
         Optional<QuestionResponseDTO> updatedQuestion = questionService.updateQuestion(id, questionRequestDTO);
         return updatedQuestion.map(ResponseEntity::ok)
