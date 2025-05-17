@@ -19,16 +19,17 @@ public class QuestionService {
     private QuestionRepository questionRepository;
 
     @Transactional
-    public QuestionResponseDTO createQuestion(QuestionResponseDTO questionResponseDTO) {
-         Question question = new Question();
-         question.setEnunciado(questionResponseDTO.getEnunciado());
-         question.setAlternatives(questionResponseDTO.getAlternatives());
-         question.setRespostaCorreta(questionResponseDTO.getRespostaCorreta());
-         question.setDisciplina(questionResponseDTO.getDisciplina());
-         question.setNivelDificuldade(questionResponseDTO.getNivelDificuldade());
+    public QuestionResponseDTO createQuestion(QuestionRequestDTO questionRequestDTO) {
+        Question question = new Question();
 
-         Question savedQuestion = questionRepository.save(question);
-         return mapToResponseDTO(savedQuestion);
+        question.setEnunciado(questionRequestDTO.getEnunciado());
+        question.setAlternatives(questionRequestDTO.getAlternatives());
+        question.setRespostaCorreta(questionRequestDTO.getRespostaCorreta());
+        question.setDisciplina(questionRequestDTO.getDisciplina());
+        question.setNivelDificuldade(questionRequestDTO.getNivelDificuldade());
+
+        Question savedQuestion = questionRepository.save(question);
+        return mapToResponseDTO(savedQuestion);
     }
 
     @Transactional(readOnly = true)
