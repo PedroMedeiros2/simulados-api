@@ -82,5 +82,24 @@ public class QuestionService {
 
         return questionResponseDTO;
     }
+
+    @Transactional
+    public List<QuestionResponseDTO> createQuestionsBatch(List<QuestionRequestDTO> questionRequestDTOs) {
+        List<Question> questions = questionRequestDTOs.stream().map(dto -> {
+            Question q = new Question();
+            q.setEnunciado(dto.getEnunciado());
+            q.setAlternatives(dto.getAlternatives());
+            q.setRespostaCorreta(dto.getRespostaCorreta());
+            q.setDisciplina(dto.getDisciplina());
+            q.setNivelDificuldade(dto.getNivelDificuldade());
+            return q;
+        }).collect(Collectors.toList());
+
+        List<Question> savedQuestions = questionRepository.saveAll(questions);
+
+        return savedQuestions.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
 }
 

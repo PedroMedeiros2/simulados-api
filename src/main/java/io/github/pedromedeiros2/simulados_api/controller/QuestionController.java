@@ -57,4 +57,11 @@ public class QuestionController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @PostMapping("/batch")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<QuestionResponseDTO>> createQuestionsBatch(@Valid @RequestBody List<@Valid QuestionRequestDTO> questions) {
+        List<QuestionResponseDTO> createdQuestions = questionService.createQuestionsBatch(questions);
+        return new ResponseEntity<>(createdQuestions, HttpStatus.CREATED);
+    }
 }
