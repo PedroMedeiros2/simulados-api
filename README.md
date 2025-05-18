@@ -1,4 +1,3 @@
-
 #  📚 Plataforma de Simulados
 
 
@@ -132,7 +131,6 @@ simulados-api/
 
 │ ├── main/
 
-│ │ ├── java/io/github/pedromedeiros2/simulados_api/
 
 │ │ │ ├── config/
 
@@ -211,8 +209,6 @@ simulados-api/
 
 
 ###  Gerando um Simulado
-
-
 
 `POST /api/simulados/gerar`
 
